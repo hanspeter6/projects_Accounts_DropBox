@@ -59,7 +59,7 @@ if (interactive()) {
                                 
                                 helpText("A table of transaction containing your keywords"),
                                 br(),
-                                tableOutput("contents1")
+                                tableOutput("contents")
                                 # br(),
                                 # textOutput("contents2"),
                                 # br()
@@ -103,12 +103,11 @@ if (interactive()) {
                         
                 })
                 
-                trial <- reactive({
+                all_transactions <- reactive({
                 
                         req(input$inputDir)
                         
                         all_frame <- vector()
-                        key_frames <- vector()
                         for(f in 1:length(dataInput()) ) {
                                 
                                 temp_doc <- dataInput()[[f]]
@@ -189,29 +188,39 @@ if (interactive()) {
                                 # keep list of tables per document
                                 all_frame <- rbind(all_frame, tab_pdf)
                                 
-                                # now id and extract on keywords:
-                                keys <- c("salary", "momen","pps")
-                                temp_keys_output <- vector()
-                                for(i in 1: length(keys)) {
-                                        a <- tab_pdf[str_detect(tab_pdf$description, regex(keys[i], ignore_case = TRUE)),]
-                                        b <- a %>%
-                                                dplyr::mutate(key = keys[i]) %>%
-                                                dplyr::select(key, dplyr::everything())
-                                        temp_keys_output <- rbind(temp_keys_output, b)
-                                }
-                                
-                                # lists of key outputs
-                                key_frames <- rbind(key_frames,temp_keys_output)
-                                key_frames <- key_frames %>%
-                                        dplyr::arrange(key,date)
-                                
                         }
                         
-                        return(key_frames)
+                        return(all_frame)
                         
                 })
                 
-                output$contents1 <- renderTable(trial())
+                keys_transactions <- reactive({
+                        # now id and extract on keywords:
+                        
+                        req(input$keys)
+                        
+                        keys <- str_trim(unlist(str_split(input$keys, ",")))
+
+                        keys_frame <- vector()
+                        for(i in 1: length(keys)) {
+                                
+                                a <- all_transactions()[str_detect(all_transactions()$description, regex(keys[i], ignore_case = TRUE)),]
+                                b <- a %>%
+                                        dplyr::mutate(key = keys[i]) %>%
+                                        dplyr::select(key, dplyr::everything())
+                                keys_frame <- rbind(keys_frame, b)
+        
+                                }
+                                
+
+                        keys_frame <- keys_frame %>%
+                                dplyr::arrange(key,date)
+                        
+                        return(keys_frame)
+                                
+                })
+                
+                output$contents <- renderTable(keys_transactions())
                 
                 
                
