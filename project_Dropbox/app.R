@@ -5,6 +5,8 @@
 ### 
 ### input to the app will be the Dropbox details .... not too sure at this time...
 ### 
+###for now will assume file format consistency and only pdf docs in the target inputDirectory
+###
 ###
 ## libraries
 library(tm) # text mining... not sure why anymore...
@@ -38,13 +40,13 @@ if (interactive()) {
 
                         ),
                         mainPanel(
-                                # textOutput("contents1"),
-                                # br(),
-                                # textOutput("contents2"),
-                                # br(),
+                                textOutput("contents1"),
+                                br(),
+                                textOutput("contents2"),
+                                br()
                                 # textOutput("contents3"),
                                 # br(),
-                                textOutput("contents4")
+                                # textOutput("contents4")
 
                         )
                 )
@@ -58,10 +60,9 @@ if (interactive()) {
         
         server <- function(input, output) {
                 
-                dataInput <- reactive( {
+                dataInput <- reactive({
                         
                         req(input$inputDir)
-                        # inputDir <- "inputDirectory"
                         
                         token <- readRDS("droptoken.rds")
                         
@@ -83,9 +84,39 @@ if (interactive()) {
                         
                         file.remove("droptoken.rds") # cleaning up local working directory
                         
-                        return(doc_list[[2]]) # seems can only return single element of a list in this case!!
+                        return(doc_list)
                         
                 })
+                
+                trial <- reactive({
+                
+                        req(input$inputDir)
+                        
+                        test_vec <- vector()
+                        for(f in 1: length(dataInput())) {
+                                
+                                # identify first doc end of pages
+                                end_pages <- which(str_detect(dataInput()[[f]], "Page")) - 1
+                        
+                                # identify how many pages:
+                                page_num <- length(end_pages)
+                        
+                                # id start of each page:
+                                start_pages <- which(str_detect(dataInput()[[f]], regex("Transaction Description", ignore_case = TRUE))) + 1
+                        
+                                # identify end of document # need to think if this is generally true?
+                                end_document <-  which(str_detect(dataInput()[[f]], "SERVICE FEE")) - 1
+                                
+                                test_vec[f] <- end_document
+                        }
+                        
+                        return(test_vec)
+                        
+                })
+                
+                output$contents1 <- renderText({trial()})
+                
+                
                
                 # output$contents1 <- renderText({
                 # 
@@ -102,10 +133,10 @@ if (interactive()) {
                 #         print(input$keys)
                 # })
                 # 
-                output$contents4 <- renderText({
-
-                        print(dataInput())
-                })
+                # output$contents4 <- renderPrint({ # for now just to check...
+                # 
+                #         dataInput()
+                # })
 
                 
                 
