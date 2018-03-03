@@ -92,7 +92,8 @@ if (interactive()) {
                 
                         req(input$inputDir)
                         
-                        for(f in 1: 1) {
+                        all_frame <- vector()
+                        for(f in 1: length(dataInput())) {
                                 
                                 temp_doc <- dataInput()[[f]]
                                 
@@ -169,9 +170,12 @@ if (interactive()) {
                                 tab_pdf$credit <- as.numeric(tab_pdf$credit)
                                 tab_pdf$balance <- as.numeric(tab_pdf$balance)
                                 
+                                # keep list of tables per document
+                                all_frame <- rbind(all_frame, tab_pdf)
+                                
                         }
                         
-                        return(tab_pdf)
+                        return(all_frame)
                         
                 })
                 
