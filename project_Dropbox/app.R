@@ -26,20 +26,39 @@ if (interactive()) {
                         sidebarPanel(
                                 
                                 # inputs
-                                helpText("Enter the directory from your root Dropbox",
-                                        "Press the submit button when you ready"),
+                                helpText("Enter the directory where the .pdf documents",
+                                        "are held. Make sure they are correctly formatted",
+                                        "and the directory contains only appropriately",
+                                        "formatted documents",
+                                        "Only press the submit button when all the windows",
+                                        "are filled in"),
                                 
                                 textInput("inputDir", "Input Directory"),
                                 
-                                submitButton("Submit", icon = NULL)
+                                helpText("Enter your keywords. Write them in lower case",
+                                         "and use commas to separate them.",
+                                         "Only press the submit button when all the windows",
+                                         "are filled in"),
                                 
-                                # br(),
-                                # textInput("outputDir", "Output Directory"),
-                                # br(),
-                                # textInput("keys", "Key Words") 
+                                textInput("keys", "Key Words"),
+                                
+                                helpText("Enter the directory where you want the results.",
+                                         "The results should be in the form of two .csv files: ",
+                                         "one containing all the transactions contained in the .pdf files",
+                                         "of the input Directory; another containing only those",
+                                         "with your keyword selections. ",
+                                         "Only press the submit button when all the windows",
+                                         "are filled in"),
+                                
+                                textInput("outputDir", "Output Directory"),
+                                
+                                submitButton("Submit", icon = NULL)
 
                         ),
                         mainPanel(
+                                
+                                helpText("A table of transaction containing your keywords"),
+                                br(),
                                 tableOutput("contents1")
                                 # br(),
                                 # textOutput("contents2"),
@@ -53,11 +72,7 @@ if (interactive()) {
         )
         
         
-        # create list of pdf documents read from input directory from remote dropbox as reactive statement
-       
-        
 
-        
         server <- function(input, output) {
                 
                 dataInput <- reactive({
