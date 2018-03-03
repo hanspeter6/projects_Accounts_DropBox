@@ -93,7 +93,8 @@ if (interactive()) {
                         req(input$inputDir)
                         
                         all_frame <- vector()
-                        for(f in 1: length(dataInput())) {
+                        key_frames <- vector()
+                        for(f in 1:length(dataInput()) ) {
                                 
                                 temp_doc <- dataInput()[[f]]
                                 
@@ -173,9 +174,25 @@ if (interactive()) {
                                 # keep list of tables per document
                                 all_frame <- rbind(all_frame, tab_pdf)
                                 
+                                # now id and extract on keywords:
+                                keys <- c("salary", "momen","pps")
+                                temp_keys_output <- vector()
+                                for(i in 1: length(keys)) {
+                                        a <- tab_pdf[str_detect(tab_pdf$description, regex(keys[i], ignore_case = TRUE)),]
+                                        b <- a %>%
+                                                dplyr::mutate(key = keys[i]) %>%
+                                                dplyr::select(key, dplyr::everything())
+                                        temp_keys_output <- rbind(temp_keys_output, b)
+                                }
+                                
+                                # lists of key outputs
+                                key_frames <- rbind(key_frames,temp_keys_output)
+                                key_frames <- key_frames %>%
+                                        dplyr::arrange(key,date)
+                                
                         }
                         
-                        return(all_frame)
+                        return(key_frames)
                         
                 })
                 
