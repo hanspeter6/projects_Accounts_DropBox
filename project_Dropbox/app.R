@@ -7,7 +7,7 @@
 ### 
 ###
 ## libraries
-library(tm)
+library(tm) # text mining... not sure why anymore...
 library(pdftools)
 library(stringr)
 library(dplyr)
@@ -66,8 +66,12 @@ if (interactive()) {
                         
                         temp <- pdf_text(filesInfo$name[i]) # list of single character string per pdf page
                         
+                        file.remove(filesInfo$name[i]) # remove the file that was added
+                        
                         doc_list <- unlist(strsplit(temp,"\n")) # create list of documents split by line
                 }
+                
+                file.remove("droptoken.rds") # cleaning up local working directory
                 
                 return(doc_list)
                 
