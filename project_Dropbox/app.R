@@ -24,7 +24,13 @@ if (interactive()) {
                         sidebarPanel(
                                 
                                 # inputs
-                                textInput("inputDir", "Input Directory")
+                                helpText("Enter the directory from your root Dropbox",
+                                        "Press the submit button when you ready"),
+                                
+                                textInput("inputDir", "Input Directory"),
+                                
+                                submitButton("Submit", icon = NULL)
+                                
                                 # br(),
                                 # textInput("outputDir", "Output Directory"),
                                 # br(),
