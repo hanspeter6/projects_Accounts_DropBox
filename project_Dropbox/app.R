@@ -97,7 +97,6 @@ if (interactive()) {
                                 doc_list[[i]] <- unlist(strsplit(temp,"\n")) # create list of documents split by line
                         }
                         
-                        file.remove("droptoken.rds") # cleaning up local working directory
                         
                         return(doc_list)
                         
@@ -147,8 +146,8 @@ if (interactive()) {
                                         description[i] <- str_trim(str_sub(pages_temp[i], 18, 60))
                                         charge[i] <- str_trim(str_sub(pages_temp[i], 70, 77))
                                         debit[i] <- str_trim(str_sub(pages_temp[i], 110, 135)) 
-                                        credit[i] <- str_trim(str_sub(pages_temp[i], 140, 159)) 
-                                        balance[i] <- str_trim(str_sub(pages_temp[i], 162, 180))
+                                        credit[i] <- str_trim(str_sub(pages_temp[i], 140, 155)) 
+                                        balance[i] <- str_trim(str_sub(pages_temp[i], 159, 180))
                                         
                                 }
                                 tab_pdf <- cbind(date, description = stripWhitespace(description), charge, debit, credit, balance)  
@@ -176,8 +175,10 @@ if (interactive()) {
                                 tab_pdf$credit <- str_replace_all(tab_pdf$credit, ' ','')
                                 tab_pdf$balance <- str_replace_all(tab_pdf$balance, ' ','')
                                 
-                                # for balance also need to get rid of '-':
+                                # for balance if has '-' need to change it to neg value:
+                                ind_minus <- str_which(tab_pdf$balance, '-')
                                 tab_pdf$balance <- str_replace_all(tab_pdf$balance, '-', '')
+                                tab_pdf$balance[ind_minus] <- str_c('-', tab_pdf$balance[ind_minus])
                                 
                                 # change to numeric
                                 tab_pdf$charge <- as.numeric(tab_pdf$charge)
@@ -187,6 +188,9 @@ if (interactive()) {
                                 
                                 # keep list of tables per document
                                 all_frame <- rbind(all_frame, tab_pdf)
+                                
+                                all_frame <- all_frame %>%
+                                        arrange(date)
                                 
                         }
                         
@@ -220,8 +224,27 @@ if (interactive()) {
                                 
                 })
                 
+                # show key transaction on app
                 output$contents <- renderTable(keys_transactions())
                 
+                # # save output files
+                # token <- readRDS("droptoken.rds")
+                # 
+                # # Create unique file names
+                # fileName1 <- "all_transactions.csv"
+                # fileName2 <- "keys_transactions.csv"
+                # 
+                # # Write the data to a temporary file locally
+                # filePath1 <- file.path(tempdir(), fileName1)
+                # filePath2 <- file.path(tempdir(), fileName2)
+                # write.csv(all_transactions(), filePath1, row.names = FALSE, quote = TRUE)
+                # write.csv(keys_transactions(), filePath2, row.names = FALSE, quote = TRUE)
+                # 
+                # # Upload the files to Dropbox
+                # drop_upload(filePath1, path = input$outputDir, dtoken = token)
+                # drop_upload(filePath2, path = input$outputDir, dtoken = token)
+                # 
+                # file.remove("droptoken.rds") # cleaning up local working directory
                 
                
                 # output$contents1 <- renderText({
