@@ -1,12 +1,11 @@
 ###
-### this app will attempt to read a list of files from a "remote" Dropbox folder
-### the programme will then process them and create a single dataframe which
-### will then be stored in the "remote" Dropbox folder. will try to work with reactive functions this time
+### this app aims to read a list of files from a "remote" Dropbox folder. The folder can only
+### contain ABSA computer generated pdf documents.
+### the programme will then process them and create two dataframes that
+### will be stored in a separate "remote" Dropbox folder.
 ### 
-### input to the app will be the Dropbox details .... not too sure at this time...
-### 
-###for now will assume file format consistency and only pdf docs in the target inputDirectory
-###
+### Next: consider checking for format and pdf consistency...and just make it work better (refactor the code)
+### and currently will overwrite previous files in output folder
 ###
 ## libraries
 library(tm) # text mining... not sure why anymore...
@@ -17,6 +16,16 @@ library(rdrop2)
 
 token <- drop_auth()
 saveRDS(token, "droptoken.rds")
+
+saveData <- function(data, fileName, outputDir) {
+        # Create a unique file name
+        # fileName <- sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data))
+        # Write the data to a temporary file locally
+        filePath <- file.path(tempdir(), fileName)
+        write.csv(data, filePath, row.names = FALSE, quote = TRUE)
+        # Upload the file to Dropbox
+        drop_upload(filePath, path = outputDir, dtoken = token) # problem with outputDir here being an object
+}
 
 ## Only run examples in interactive R sessions
 if (interactive()) {
@@ -51,9 +60,13 @@ if (interactive()) {
                                          "are filled in"),
                                 
                                 textInput("outputDir", "Output Directory"),
-                                
-                                submitButton("Submit", icon = NULL)
 
+                                submitButton("Submit", icon = NULL)
+                                # br(),
+                                # 
+                                # # Button
+                                # downloadButton("downloadData", "Download")
+                                
                         ),
                         mainPanel(
                                 
@@ -105,7 +118,8 @@ if (interactive()) {
                 all_transactions <- reactive({
                 
                         req(input$inputDir)
-                        
+                        req(input$outputDir)
+                
                         all_frame <- vector()
                         for(f in 1:length(dataInput()) ) {
                                 
@@ -194,6 +208,10 @@ if (interactive()) {
                                 
                         }
                         
+                        outputDir <- as.character(input$outputDir)
+                        
+                        saveData(all_frame, "all_transactions.csv", outputDir)
+                        
                         return(all_frame)
                         
                 })
@@ -202,6 +220,7 @@ if (interactive()) {
                         # now id and extract on keywords:
                         
                         req(input$keys)
+                        req(input$outputDir)
                         
                         keys <- str_trim(unlist(str_split(input$keys, ",")))
 
@@ -220,32 +239,92 @@ if (interactive()) {
                         keys_frame <- keys_frame %>%
                                 dplyr::arrange(key,date)
                         
+                        outputDir <- as.character(input$outputDir)
+                        
+                        saveData(keys_frame, "keys_transactions.csv", outputDir)
+                        
                         return(keys_frame)
                                 
                 })
                 
                 # show key transaction on app
                 output$contents <- renderTable(keys_transactions())
+
                 
-                # # save output files
+                # 
+                # # Downloadable csv of selected dataset to local directory (not sure this will work on remote server???)
+                # output$downloadData <- downloadHandler(
+                #         filename = "test.csv",
+                #         content = function(file) {
+                #                 write.csv(keys_transactions(), file, row.names = FALSE)
+                #         }
+                # )
+                # 
+                # dataOutput <- reactive({
+                # 
+                #         req(input$outputDir)
+                # 
+                #         token <- readRDS("droptoken.rds")
+                #         
+                #         fileName <- "test.csv"
+                #         
+                #         drop_upload(fileName, path = "outputDirectory", ktoken = token)
+                # 
+                # })
+
+                
+                
+
+
+                
+        }
+        
+        # outputDir <- "outputDirectory"
+        # 
+        # saveData <- function(data) {
+        #         data <- c(1,2,3)
+        #         # Create a unique file name
+        #         fileName <- sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data))
+        #         # Write the data to a temporary file locally
+        #         filePath <- file.path(tempdir(), fileName)
+        #         write.csv(data, filePath, row.names = FALSE, quote = TRUE)
+        #         # Upload the file to Dropbox
+        #         drop_upload(filePath, path = outputDir)
+        # }
+        # saveData()
+        
+        shinyApp(ui, server)
+}
+
+
+
+
+
+         
+                # ## save output files locally
+                # output$downloadData <- downloadHandler(
+                #         filename = "all_transactions.csv",
+                #         
+                #         content = function(file) {
+                #                 write.csv(all_transactions(), file, row.names = FALSE)
+                #         }
+                # )
+                
+                
+                # # read in the token        
                 # token <- readRDS("droptoken.rds")
-                # 
-                # # Create unique file names
+                        
+                # #filename
                 # fileName1 <- "all_transactions.csv"
-                # fileName2 <- "keys_transactions.csv"
-                # 
+                #         
                 # # Write the data to a temporary file locally
-                # filePath1 <- file.path(tempdir(), fileName1)
-                # filePath2 <- file.path(tempdir(), fileName2)
-                # write.csv(all_transactions(), filePath1, row.names = FALSE, quote = TRUE)
-                # write.csv(keys_transactions(), filePath2, row.names = FALSE, quote = TRUE)
-                # 
-                # # Upload the files to Dropbox
-                # drop_upload(filePath1, path = input$outputDir, dtoken = token)
-                # drop_upload(filePath2, path = input$outputDir, dtoken = token)
-                # 
-                # file.remove("droptoken.rds") # cleaning up local working directory
-                
+                # write.csv(all_transactions(), fileName1, row.names = FALSE, quote = TRUE)
+                #         
+                #         # # Upload the files to Dropbox
+                #         drop_upload(filePath1, path = input$outputDir, dtoken = token)
+                #         
+                #         file.remove("droptoken.rds") # cleaning up local working directory
+                # })
                
                 # output$contents1 <- renderText({
                 # 
@@ -269,10 +348,7 @@ if (interactive()) {
 
                 
                 
-        }
-        
-        shinyApp(ui, server)
-}
+
 
 # # Read all the files into a list
 # filesInfo <- drop_dir(input$inputDir) #list of files in Dropbox /inputDir ("inputDirectory")
