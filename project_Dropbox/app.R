@@ -4,8 +4,13 @@
 ### the programme will then process them and create two dataframes that
 ### will be stored in a separate "remote" Dropbox folder.
 ### 
-### Next: consider checking for format and pdf consistency...and just make it work better (refactor the code)
-### and currently will overwrite previous files in output folder
+### Next:
+### a) check for input files format and pdf consistency.
+### b) create drop-down of different standard bank account formats
+### c) explore default file and paths for input and output
+### d) include new file names for output
+### e) improve code and helptexts
+### f) deal with oauth2 ... ie connect first and then redirect... possibly write another app that does that.
 ###
 
 
@@ -17,7 +22,7 @@ library(stringr)
 library(dplyr)
 library(rdrop2)
 
-token <- drop_auth( key = "gdfo2n4a9soxaxp", secret = "8bi7c12qpr9o7bh" ) #drop_auth(new_user = FALSE, cache = TRUE)
+token <- drop_auth()
 saveRDS(token, "droptoken.rds")
 
 saveData <- function(data, fileName, outputDir) {
@@ -35,12 +40,13 @@ saveData <- function(data, fileName, outputDir) {
          sidebarLayout(
                  sidebarPanel(
                          
-                         # helpText("If you are a first-time user you need to tell",
-                         #          "your Dropbox account that it's OK for this app",
-                         #          "to acess it. If so, click 'Yes'"),
+                         # helpText("If you are a first-time user you need to give the OK",
+                         #          "to Dropbox for this app to acess it. I"),
                          # 
-                         # actionButton("newUser", "Yes, I am a new user"),
-                         
+                         # actionButton(inputId='ab', label="Authorise", 
+                         #              icon = icon("th"), 
+                         #              onclick ="window.open('https://www.dropbox.com/oauth2/authorize?client_id=...&redirect_uri=..')"),
+                         # 
                          helpText("Enter the directory where the .pdf documents",
                                 "are held. Make sure they are correctly formatted",
                                 "and the directory contains only appropriately",
